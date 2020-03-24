@@ -13,6 +13,17 @@
 
 using std::string;
 
+struct mlsvm_results_pressio {
+  double acc=0.001;
+  double sn=0.001;
+  double sp=0.001;
+  double ppv=0.001;
+  double npv=0.001;
+  double f1=0.001;
+  double gm=0.001;
+  size_t iters=1;
+};
+
 class Config_params{
 private:
     Config_params(){}
@@ -141,19 +152,19 @@ private:
 //    void check_input_prediction_parameters();
 
     void read_classification_training_parameters(
-            pugi::xml_node& root,int argc, char * argv[]);
+            pugi::xml_node& root,int argc, const char * argv[]);
 
     void read_classification_prediction_parameters(
-            pugi::xml_node& root,int argc, char * argv[]);
+            pugi::xml_node& root,int argc, const char * argv[]);
 
     void read_svm_predict_params(
-            pugi::xml_node& root,int argc, char * argv[]);
+            pugi::xml_node& root,int argc, const char * argv[]);
 
     void read_convert_files_parameters(
-            pugi::xml_node& root,int argc, char * argv[]);
+            pugi::xml_node& root,int argc, const char * argv[]);
 
     void read_clustering_parameters(
-            pugi::xml_node& root,int argc, char * argv[]);
+            pugi::xml_node& root,int argc, const char * argv[]);
 
     //======= Timers ========
     std::clock_t t_start_coarsening;
@@ -172,8 +183,8 @@ public:
     void print_classification_prediction_params();
     void print_svm_prediction_params();
     void print_convert_files_params();
-    void read_flann_parameters(pugi::xml_node& root,int argc, char * argv[]);
-    void read_zscore_parameters(pugi::xml_node& root,int argc, char * argv[]);
+    void read_flann_parameters(pugi::xml_node& root,int argc, const char * argv[]);
+    void read_zscore_parameters(pugi::xml_node& root,int argc, const char * argv[]);
     void print_flann_params();
     void print_zscore_params();
 
@@ -188,7 +199,7 @@ public:
     void debug_only_set_n_norm_data_path_file_name(string const path_file_name);
 
     void init_to_default();
-    void read_params(string XML_FILE_PATH,int argc, char * argv[],
+    void read_params(string XML_FILE_PATH,int argc, const char * argv[],
                      program_parts caller_func=main);
 
 
@@ -229,6 +240,7 @@ public:
     double get_best_gamma() const{ return this->best_gamma; }
     void reportFinalModelInVCycle() const;
     void print_final_results() const;
+    mlsvm_results_pressio get_final_results() const;
     void print_ref_result(const std::vector<ref_results>& v_ref_results) const;
 
     // Debug parameters

@@ -1,17 +1,22 @@
-ALL: mlsvm_classifier
+ALL: mlsvm_classifier mlsvm_classifier_pressio
 CC 	 = g++ -L. 
 CFLAGS 	 = -I.	
-CPPFLAGS = -std=c++11 -g -O3     -w # -W -Wall -Weffc++ -Wextra -pedantic -O3
+CPPFLAGS = $(shell pkg-config parmetis --cflags)
+CXXFLAGS = -std=c++17 -g -O3     -w # -W -Wall -Weffc++ -Wextra -pedantic -O3
 LOCDIR   = .
 MAIN 	 = mlsvm_classifier.cc
 MANSEC   = Mat
 
-LIBS= -lpugixml -lm -fopenmp 
+LIBS= -lpugixml -lm -fopenmp $(shell pkg-config --libs parmetis) -lstdc++fs
 #LIBFLANN= /usr/local/lib/libflann_cpp_s.a
 LIBFLANN= ${FLANN_PATH}
 
-MLSVM_SRCS = pugixml.cc etimer.cc common_funcs.cc OptionParser.cc k_fold.cc svm_weighted.cc config_params.cc model_selection.cc solver.cc partitioning.cc refinement.cc  main_recursion.cc coarsening.cc loader.cc ds_node.cc ds_graph.cc mlsvm_classifier.cc
+MLSVM_SRCS = pugixml.cc etimer.cc common_funcs.cc OptionParser.cc k_fold.cc svm_weighted.cc config_params.cc model_selection.cc solver.cc partitioning.cc refinement.cc  main_recursion.cc coarsening.cc loader.cc ds_node.cc ds_graph.cc mlsvm_classifier.cc mlsvm_main_core.cc
 MLSVM_OBJS = $(MLSVM_SRCS:.cc=.o)
+
+MLSVM_PRESSIO_SRCS = pugixml.cc etimer.cc common_funcs.cc OptionParser.cc k_fold.cc svm_weighted.cc config_params.cc model_selection.cc solver.cc partitioning.cc refinement.cc  main_recursion.cc coarsening.cc loader.cc ds_node.cc ds_graph.cc mlsvm_classifier_pressio.cc mlsvm_main_core.cc
+MLSVM_PRESSIO_OBJS = $(MLSVM_PRESSIO_SRCS:.cc=.o)
+
 
 MLSVM_SEP_TEST_SRCS = pugixml.cc etimer.cc common_funcs.cc OptionParser.cc k_fold.cc svm_weighted.cc config_params.cc model_selection.cc solver.cc partitioning.cc refinement.cc  main_recursion.cc coarsening.cc loader.cc ds_node.cc ds_graph.cc mlsvm_sep_test_classifier.cc
 MLSVM_SEP_TEST_OBJS = $(MLSVM_SEP_TEST_SRCS:.cc=.o)
@@ -87,8 +92,10 @@ main_libs_inst:  etimer.o common_funcs.o OptionParser.o k_fold.o svm.o config_pa
 	${RM} main.o 
 
 mlsvm_classifier: $(MLSVM_OBJS) chkopts
-	-${CLINKER} $(MLSVM_OBJS)  ${PETSC_MAT_LIB} -o mlsvm_classifier
-	${RM} mlsvm_classifier.o 
+	-${CLINKER} $(MLSVM_OBJS)  ${PETSC_MAT_LIB} ${LIBS} -o mlsvm_classifier
+
+mlsvm_classifier_pressio: $(MLSVM_PRESSIO_OBJS) chkopts
+	${CXXLINKER} $(MLSVM_PRESSIO_OBJS)  ${PETSC_MAT_LIB} ${LIBS} -o mlsvm_classifier_pressio
 	
 mlsvm_sep_test_classifier: $(MLSVM_SEP_TEST_OBJS) chkopts
 	-${CLINKER} $(MLSVM_SEP_TEST_OBJS)  ${PETSC_MAT_LIB} -o mlsvm_sep_test_classifier

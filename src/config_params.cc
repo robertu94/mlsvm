@@ -153,7 +153,7 @@ void Config_params::print_zscore_params(){
 }
 
 void Config_params::read_params(std::string XML_FILE_PATH,
-                                int argc, char * argv[], program_parts caller_func){
+                                int argc, const char * argv[], program_parts caller_func){
 
     PetscBool       flg;
     PetscInt        temp;
@@ -247,7 +247,7 @@ void Config_params::read_params(std::string XML_FILE_PATH,
 }
 
 
-void Config_params::read_classification_training_parameters(pugi::xml_node& root,int argc, char * argv[]){
+void Config_params::read_classification_training_parameters(pugi::xml_node& root,int argc, const char * argv[]){
 
     /// Set debug parameters
     debug_exp_CS       = root.child("debug_exp_CS").attribute("intVal").as_int();
@@ -386,7 +386,7 @@ void Config_params::read_classification_training_parameters(pugi::xml_node& root
 }
 
 
-void Config_params::read_classification_prediction_parameters(pugi::xml_node& root,int argc, char * argv[]){
+void Config_params::read_classification_prediction_parameters(pugi::xml_node& root,int argc, const char * argv[]){
 
 
     mlsvm_version = root.child("mlsvm_version").attribute("stringVal").value();
@@ -422,7 +422,7 @@ void Config_params::read_classification_prediction_parameters(pugi::xml_node& ro
     cout << "[CP] input prediction parameters are read" << endl;
 }
 
-void Config_params::read_svm_predict_params(pugi::xml_node& root,int argc, char * argv[]){
+void Config_params::read_svm_predict_params(pugi::xml_node& root,int argc, const char * argv[]){
     mlsvm_version = root.child("mlsvm_version").attribute("stringVal").value();
     /// read the parameters from the XML file (params.xml)
     ds_path             = root.child("ds_path").attribute("stringVal").value();
@@ -443,7 +443,7 @@ void Config_params::read_svm_predict_params(pugi::xml_node& root,int argc, char 
     std::cout << "[CP] input svm predict parameters are read" << std::endl;
 }
 
-void Config_params::read_convert_files_parameters(pugi::xml_node& root,int argc, char * argv[]){
+void Config_params::read_convert_files_parameters(pugi::xml_node& root,int argc, const char * argv[]){
 
 
     mlsvm_version = root.child("mlsvm_version").attribute("stringVal").value();
@@ -464,7 +464,7 @@ void Config_params::read_convert_files_parameters(pugi::xml_node& root,int argc,
 }
 
 
-void Config_params::read_clustering_parameters(pugi::xml_node& root,int argc, char * argv[]){
+void Config_params::read_clustering_parameters(pugi::xml_node& root,int argc, const char * argv[]){
 
 
     mlclustering_version = root.child("mlclustering_version").attribute("stringVal").value();
@@ -534,7 +534,7 @@ void Config_params::read_clustering_parameters(pugi::xml_node& root,int argc, ch
 }
 
 
-void Config_params::read_flann_parameters(pugi::xml_node& root,int argc, char * argv[]){ //@ 040317-1842
+void Config_params::read_flann_parameters(pugi::xml_node& root,int argc, const char * argv[]){ //@ 040317-1842
     // read XML values
     nn_number_of_classes    = root.child("nn_number_of_classes").attribute("intVal").as_int();
     nn_number_of_neighbors  = root.child("nn_number_of_neighbors").attribute("intVal").as_int();
@@ -843,6 +843,42 @@ void Config_params::print_final_results() const{
     }
 }
 
+mlsvm_results_pressio Config_params::get_final_results() const {
+    mlsvm_results_pressio results;
+    if (getTestdataExist()){
+        double sum_acc=0;
+        double sum_gmean=0;
+        double sum_sens=0;
+        double sum_spec=0;
+        double sum_ppv=0;
+        double sum_npv=0;
+        double sum_f1=0;
+
+        for(unsigned int i=0; i< this->all_summary.size(); i++){
+            sum_acc += this->all_summary[i].perf.at(Acc);
+            sum_sens += this->all_summary[i].perf.at(Sens);
+            sum_spec += this->all_summary[i].perf.at(Spec);
+            sum_ppv += this->all_summary[i].perf.at(PPV);
+            sum_npv += this->all_summary[i].perf.at(NPV);
+            sum_f1 += this->all_summary[i].perf.at(F1);
+            sum_gmean += this->all_summary[i].perf.at(Gmean);
+
+        }
+
+        results.acc = sum_acc / this->all_summary.size();
+        results.sn = sum_sens / this->all_summary.size();
+        results.sp = sum_spec / this->all_summary.size();
+        results.ppv = sum_ppv / this->all_summary.size();
+        results.npv = sum_npv / this->all_summary.size();
+        results.f1 = sum_f1 / this->all_summary.size();
+        results.gm = sum_gmean / this->all_summary.size();
+    }else{
+        cout << "Warning: The test data was not provided" <<
+                " final report is not availabel!" << endl;
+    }
+    return results;
+}
+
 
 
 void Config_params::print_ref_result(const std::vector<ref_results>& v_ref_results) const{
@@ -974,7 +1010,7 @@ void Config_params::export_models_metadata(){
     cout << "[CP][EMM] The models' summary are exported successfully" <<endl;
 }
 
-void Config_params::read_zscore_parameters(pugi::xml_node& root,int argc, char * argv[]){ //@ 080317-1354
+void Config_params::read_zscore_parameters(pugi::xml_node& root,int argc, const char * argv[]){ //@ 080317-1354
     // read XML values
     ds_path             = root.child("ds_path").attribute("stringVal").value();
     ds_name             = root.child("ds_name").attribute("stringVal").value();
