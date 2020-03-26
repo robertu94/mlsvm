@@ -8,6 +8,7 @@
 #include "config_params.h"
 #include <getopt.h>
 
+using namespace std::literals;
 namespace fs = std::filesystem;
 
 static void run_mlsvm(bool verbose, std::ostream& out, std::vector<const char*>& args) {
@@ -166,6 +167,27 @@ struct tmp_link {
   fs::path filename;
 };
 
+/**
+ * An RAII wrapper for a tmp directory
+ */
+struct tmp_dir {
+  tmp_dir() noexcept= default;
+  tmp_dir(fs::path const& name): filename(name) {
+    fs::create_directory(name);
+  }
+  ~tmp_dir() {
+    if(!filename.empty()) fs::remove_all(filename);
+  }
+  tmp_dir(tmp_dir const&)=delete;
+  tmp_dir& operator=(tmp_dir const&)=delete;
+
+  tmp_dir(tmp_dir &&)noexcept=default;
+  tmp_dir& operator=(tmp_dir &&)noexcept=default;
+
+  private:
+  fs::path filename;
+};
+
 int main(int argc, char *argv[])
 {
   int rank;
@@ -197,6 +219,8 @@ int main(int argc, char *argv[])
     
 
     std::vector<tmp_link> tmp_files;
+    fs::path tmp_path = cmdline_args.decompressed.string() + ".tmp_dir"s;
+    tmp_dir temp_dir;
     if(rank == 0) {
       //copy the auxiliary files
       std::vector<std::string> aux_files = {"_label.dat", "_maj_norm_data.dat",
@@ -216,6 +240,7 @@ int main(int argc, char *argv[])
           //the src and dest are the same
         }
       }
+      temp_dir = {tmp_path};
     }
 
     //finish parsing arguments doing this here to retain scope
@@ -227,13 +252,18 @@ int main(int argc, char *argv[])
     args.push_back(filename.c_str());
     args.push_back("--ds_p");
     args.push_back(dirname.c_str());
+    args.push_back("--tmp_p");
+    args.push_back(tmp_path.c_str());
+
 
     if(rank == 0) {
       //if you are only running petsc on a subcommunicator
       //accodring to the docs for PETSc you should set PETSC_COMM_WORLD
       PETSC_COMM_WORLD = petsc_comm;
       run_mlsvm(cmdline_args.verbose, out, args);
+      //cleanup the tmpdir
     }
+
   }
 
   MPI_Comm parent;
