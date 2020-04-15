@@ -12,7 +12,7 @@ using namespace std::literals;
 namespace fs = std::filesystem;
 
 static void run_mlsvm(bool verbose, std::ostream& out, std::vector<const char*>& args, fs::path const& logfile_path) {
-	int logfile = open(logfile_path.c_str(), O_WRONLY|O_CREAT);
+	int logfile = open(logfile_path.c_str(), O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR);
   int devnull = open("/dev/null", O_WRONLY);
   int stdout_cpy = dup(STDOUT_FILENO);
   int stderr_cpy = dup(STDERR_FILENO);
@@ -91,6 +91,7 @@ struct cmdline_args {
   std::string dataset;
   fs::path decompressed;
   fs::path datadir;
+  std::string config_name;
   bool verbose = false;
   bool print_exemplars = true;
 };
@@ -107,7 +108,8 @@ cmdline_args parse_args(int argc, char* const  argv[]) {
     {"external_dataset", required_argument, 0, 0},
     {"external_datadir", required_argument, 0, 0},
     {"external_verbose", no_argument, 0, 0},
-    {"api", required_argument, 0, 0}
+    {"api", required_argument, 0, 0},
+    {"config_name", required_argument, 0, 0}
   };
 
   cmdline_args result;
@@ -137,6 +139,8 @@ cmdline_args parse_args(int argc, char* const  argv[]) {
             case 6:
               result.verbose = true;
               break;
+            case 8:
+              result.config_name = optarg;
             default: 
               //we're going to ignore the other optsion since data is passed in petsc format
               break;
@@ -256,7 +260,7 @@ int main(int argc, char *argv[])
     args.push_back(dirname.c_str());
     args.push_back("--tmp_p");
     args.push_back(tmp_path.c_str());
-		fs::path logfile_path = cmdline_args.datadir / (cmdline_args.dataset + std::string(cmdline_args.decompressed.filename()) + ".log");
+		fs::path logfile_path = cmdline_args.datadir / (cmdline_args.config_name + ".log");
 
 
     if(rank == 0) {
