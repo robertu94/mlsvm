@@ -11,7 +11,8 @@
 using namespace std::literals;
 namespace fs = std::filesystem;
 
-static void run_mlsvm(bool verbose, std::ostream& out, std::vector<const char*>& args) {
+static void run_mlsvm(bool verbose, std::ostream& out, std::vector<const char*>& args, fs::path const& logfile_path) {
+	int logfile = open(logfile_path.c_str(), O_WRONLY|O_CREAT);
   int devnull = open("/dev/null", O_WRONLY);
   int stdout_cpy = dup(STDOUT_FILENO);
   int stderr_cpy = dup(STDERR_FILENO);
@@ -20,8 +21,8 @@ static void run_mlsvm(bool verbose, std::ostream& out, std::vector<const char*>&
   if(verbose) {
     dup2(STDERR_FILENO, STDOUT_FILENO);
   } else {
-    dup2(devnull, STDOUT_FILENO);
-    dup2(devnull, STDERR_FILENO);
+    dup2(logfile, STDOUT_FILENO);
+    dup2(logfile, STDERR_FILENO);
   }
   mlsvm_main(args.size(), &args[0]);
 
@@ -52,6 +53,7 @@ static void run_mlsvm(bool verbose, std::ostream& out, std::vector<const char*>&
   close(devnull);
   close(stdout_cpy);
   close(stderr_cpy);
+	close(logfile);
 }
 
 static void print_exemplars(std::ostream& out) {
@@ -254,13 +256,14 @@ int main(int argc, char *argv[])
     args.push_back(dirname.c_str());
     args.push_back("--tmp_p");
     args.push_back(tmp_path.c_str());
+		fs::path logfile_path = cmdline_args.datadir / (cmdline_args.dataset + std::string(cmdline_args.decompressed.filename()) + ".log");
 
 
     if(rank == 0) {
       //if you are only running petsc on a subcommunicator
       //accodring to the docs for PETSc you should set PETSC_COMM_WORLD
       PETSC_COMM_WORLD = petsc_comm;
-      run_mlsvm(cmdline_args.verbose, out, args);
+      run_mlsvm(cmdline_args.verbose, out, args, logfile_path);
       //cleanup the tmpdir
     }
 
