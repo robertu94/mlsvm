@@ -16,7 +16,7 @@ Config_params* Config_params::instance = NULL;
 
 void run_flann(Mat& m_data, Mat& m_indices, Mat& m_dists);
 
-int main(int argc, char **argv){
+int main(int argc, const char **argv){
 //    PetscInitialize(&argc, &argv, NULL, NULL);
     PetscInitialize(NULL, NULL, NULL, NULL);
     ETimer t_all;

@@ -1,13 +1,15 @@
 ALL: mlsvm_classifier mlsvm_classifier_pressio
-CC 	 = g++ -L. 
+CC 	 = clang++ -L. 
+CXX 	 = clang++ -L. 
 CFLAGS 	 = -I.	
 CPPFLAGS = $(shell pkg-config parmetis --cflags)
-CXXFLAGS = -std=c++17 -g -O3     -w # -W -Wall -Weffc++ -Wextra -pedantic -O3
+SANITIZE= -fsanitize=undefined
+CXXFLAGS = -std=c++17 -g -Og -fno-omit-frame-pointer $(SANITIZE) -w -W -Wall -Weffc++ -Wextra -pedantic
 LOCDIR   = .
 MAIN 	 = mlsvm_classifier.cc
 MANSEC   = Mat
 
-LIBS= -lpugixml -lm -fopenmp $(shell pkg-config --libs parmetis) -lstdc++fs
+LIBS= -lpugixml -lm -fopenmp $(shell pkg-config --libs parmetis) -lstdc++fs $(shell pkg-config --libs liblz4) $(shell pkg-config --libs flann) $(SANITIZE)
 #LIBFLANN= /usr/local/lib/libflann_cpp_s.a
 LIBFLANN= ${FLANN_PATH}
 
@@ -159,7 +161,7 @@ mlsvm_csv_to_vec: $(CSV_TO_VEC_OBJS) chkopts
 	${RM} mlsvm_csv_to_vec.o
 
 mlsvm_knn: $(KNN_OBJS) chkopts
-	-${CLINKER}  $(KNN_OBJS) ${PETSC_MAT_LIB} -o mlsvm_knn
+	-${CLINKER}  $(KNN_OBJS) ${PETSC_MAT_LIB} ${LIBS} -o mlsvm_knn
 	${RM} mlsvm_knn.o
 	
 pers: $(PERS_OBJS) chkopts
