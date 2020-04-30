@@ -188,8 +188,18 @@ run_mlsvm(bool verbose, std::ostream& out,
     dup2(logfile, STDOUT_FILENO);
     dup2(logfile, STDERR_FILENO);
   }
-  mlsvm_flann(flann_args.size(), &flann_args[0]);
-  mlsvm_main(classifier_args.size(), &classifier_args[0]);
+
+	int is_error = 0;
+	mlsvm_results_pressio results;
+	int iters;
+	try {
+		mlsvm_flann(flann_args.size(), &flann_args[0]);
+		mlsvm_main(classifier_args.size(), &classifier_args[0]);
+		results = paramsInst->get_final_results();
+		iters = (paramsInst->get_main_num_kf_iter() * paramsInst->get_main_num_repeat_exp());
+	} catch(...) {
+		is_error = 1;
+	}
 
   //ensure that output is flushed, otherwise buffered
   //output will be written after the file descriptors
@@ -201,7 +211,6 @@ run_mlsvm(bool verbose, std::ostream& out,
   dup2(stdout_cpy, STDOUT_FILENO);
   dup2(stderr_cpy, STDERR_FILENO);
 
-  auto results = paramsInst->get_final_results();
   out << "external:api=3" << std::endl;
   out << "acc=" << results.acc << std::endl;
   out << "sn=" << results.sn << std::endl;
@@ -210,7 +219,8 @@ run_mlsvm(bool verbose, std::ostream& out,
   out << "npv=" << results.npv << std::endl;
   out << "f1=" << results.f1 << std::endl;
   out << "gm=" << results.gm << std::endl;
-  out  << "iters=" << (paramsInst->get_main_num_kf_iter() * paramsInst->get_main_num_repeat_exp()) << std::endl;
+  out  << "iters=" << iters << std::endl;
+	out << "is_error=" << is_error << std::endl;
 
 
 
@@ -230,7 +240,8 @@ ppv=0.001
 npv=0.001
 f1=0.001
 gm=0.001
-iters=1)" << std::endl;
+iters=1
+is_error=0)" << std::endl;
 }
 
 /**

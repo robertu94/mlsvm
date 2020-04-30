@@ -3,7 +3,7 @@ CC 	 = clang++ -L.
 CXX 	 = clang++ -L. 
 CFLAGS 	 = -I.	
 CPPFLAGS = $(shell pkg-config parmetis --cflags)
-SANITIZE= -fsanitize=undefined
+SANITIZE=
 CXXFLAGS = -std=c++17 -g -Og -fno-omit-frame-pointer $(SANITIZE) -w -W -Wall -Weffc++ -Wextra -pedantic
 LOCDIR   = .
 MAIN 	 = mlsvm_classifier.cc
